@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <queue>
+#include <map>
 #ifndef TABLEAU_HPP_INCLUDED
 #define TABLEAU_HPP_INCLUDED
 
@@ -30,12 +31,15 @@ private:
     std::unique_ptr<entry> root;
     std::queue<std::unique_ptr<entry>> to_reduce;
 
+    void reduce(entry &e);
+
 public:
     tableau(const std::string &formula);
     void append(bool sign, const std::string &formula);
     void reduce();
     bool is_finished() const;
     bool is_contradictory() const;
+    std::map<std::string, bool> model() const;
 };
 
 #endif

@@ -23,6 +23,11 @@ void tableau::reduce()
     //TODO:
 }
 
+void tableau::reduce(tableau::entry &e)
+{
+    //TODO
+}
+
 bool tableau::is_finished() const
 {
     return to_reduce.empty();
@@ -31,4 +36,9 @@ bool tableau::is_finished() const
 bool tableau::is_contradictory() const
 {
     return root && root->contradictory;
+}
+
+std::map<std::string, bool> tableau::model() const
+{
+    //TODO:
 }
