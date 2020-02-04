@@ -1,4 +1,5 @@
 #include "tableau.hpp"
+#include "connectives.hpp"
 #include <string>
 #include <memory>
 #include <queue>
