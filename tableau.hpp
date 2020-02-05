@@ -1,6 +1,7 @@
 /***
  * 
  ***/
+#include "connectives.hpp"
 #include <memory>
 #include <string>
 #include <queue>
@@ -18,6 +19,7 @@ private:
 
         bool sign;
         bool contradictory;
+        bool reduced;
         std::string subformula;
         std::unique_ptr<entry> left;
         std::unique_ptr<entry> right;
@@ -25,13 +27,15 @@ private:
 
     public:
         entry(bool sign, const std::string &subformula, entry *parent);
+        bool is_leaf() const;
     };
 
 private:
     std::unique_ptr<entry> root;
-    std::queue<std::unique_ptr<entry>> to_reduce;
+    std::queue<entry *> to_reduce;
 
     void reduce(entry &e);
+    void append_atomic(entry &e, bool sign, connective conn, const std::string &lhs, const std::string &rhs);
 
 public:
     tableau(const std::string &formula);
