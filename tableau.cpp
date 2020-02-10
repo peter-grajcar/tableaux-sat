@@ -19,6 +19,8 @@ bool tableau::entry::is_leaf() const
 tableau::tableau(const std::string &formula)
 {
     root = std::make_unique<tableau::entry>(false, formula, nullptr);
+    (root->subformula).erase(remove_if((root->subformula).begin(), (root->subformula).end(), isspace), root->subformula.end());
+    //std::cout << *root << std::endl;
     to_reduce.push(&*root);
 }
 
@@ -32,7 +34,7 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
     switch (conn)
     {
     case connective::NOT:
-        e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
+        e.left = std::make_unique<tableau::entry>(!sign, rhs, &e);
         break;
     case connective::AND:
         if (sign)
@@ -117,14 +119,37 @@ void tableau::reduce()
 
 void tableau::reduce(tableau::entry &e)
 {
-    if (e.reduced || e.contradictory)
+    //std::cout << "Reducing " << e << std::endl;
+
+    if (e.reduced || e.contradictory || e.subformula.length() <= 1) //TODO: chech if e is propositional letter
+    {
+        e.reduced = true;
         return;
+    }
 
     size_t conn_index = split_index(e.subformula);
     connective conn = char_to_connective(e.subformula[conn_index]);
 
-    std::string lhs = e.subformula.substr(0, conn_index - 1);
-    std::string rhs = e.subformula.substr(conn_index + 1, e.subformula.length());
+    // Split the subformula into two
+    size_t a, b, c, d;
+    size_t len = e.subformula.length();
+    a = 0;
+    if (e.subformula[0] == '(')
+        ++a;
+    b = conn_index - a;
+    if (e.subformula[b] == ')')
+        --b;
+    c = conn_index + 1;
+    if (e.subformula[c] == '(')
+        ++c;
+    d = len - c;
+    if (e.subformula[c + d - 1] == ')')
+        d--;
+
+    std::string lhs(e.subformula, a, b);
+    std::string rhs(e.subformula, c, d);
+
+    //std::cout << lhs << ',' << rhs << std::endl;
 
     std::queue<tableau::entry *> entries;
     entries.push(&e);

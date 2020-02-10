@@ -30,19 +30,19 @@ int get_precedence(connective conn)
     switch (conn)
     {
     case connective::NOT:
-        return 1;
+        return 3;
     case connective::AND:
         return 2;
     case connective::OR:
         return 2;
     case connective::IF:
-        return 3;
+        return 1;
     case connective::IFF:
-        return 3;
+        return 1;
     case connective::PAREN_OPEN:
-        return 1;
+        return 10;
     case connective::PAREN_CLOSE:
-        return 1;
+        return 10;
     default:
         return 0;
     }

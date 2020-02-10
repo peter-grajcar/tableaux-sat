@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-    tableau t("p & q");
+    tableau t("(p & q) | ~q");
 
     t.reduce();
 
