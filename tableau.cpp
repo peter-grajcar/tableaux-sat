@@ -7,9 +7,10 @@
 #include <iostream>
 
 tableau::entry::entry(bool sign, const std::string &subformula, entry *parent)
-    : sign(sign), subformula(subformula), parent(parent), left(nullptr), right(nullptr), contradictory(false)
+    : sign(sign), subformula(subformula), parent(parent), left(nullptr), right(nullptr), contradictory(false), reduced(false)
 {
-    contradictory = is_contradictory();
+    reduced = is_propositional_letter(subformula);
+    contradictory = is_contradictory() || (parent && parent->contradictory);
     if (contradictory)
         propagate_contradiction();
 }
@@ -59,16 +60,34 @@ void tableau::entry::propagate_contradiction()
     }
 }
 
-tableau::tableau(const std::string &formula)
+tableau::tableau(bool sign, const std::string &formula)
 {
-    root = std::make_unique<tableau::entry>(false, formula, nullptr);
-    (root->subformula).erase(remove_if((root->subformula).begin(), (root->subformula).end(), isspace), root->subformula.end());
-    to_reduce.push(&*root);
+    root = std::make_unique<tableau::entry>(sign, formula, nullptr);
+    if (!is_propositional_letter(formula))
+        to_reduce.push(&*root);
 }
 
 void tableau::append(bool sign, const std::string &formula)
 {
-    //TODO:
+    std::queue<tableau::entry *> entries;
+    entries.push(&*root);
+    while (!entries.empty())
+    {
+        tableau::entry &f = *entries.front();
+        entries.pop();
+        if (f.is_leaf())
+        {
+            f.left = std::make_unique<tableau::entry>(sign, formula, &f);
+            to_reduce.push(&*f.left);
+        }
+        else
+        {
+            if (f.left)
+                entries.push(&*f.left);
+            if (f.right)
+                entries.push(&*f.right);
+        }
+    }
 }
 
 void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const std::string &lhs, const std::string &rhs)
@@ -140,14 +159,20 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
         e.left->propagate_contradiction();
         to_reduce.push(&*e.left);
         if (e.left->left)
+        {
+            e.left->left->propagate_contradiction();
             to_reduce.push(&*e.left->left);
+        }
     }
     if (e.right)
     {
         e.right->propagate_contradiction();
         to_reduce.push(&*e.right);
         if (e.right->left)
+        {
+            e.right->left->propagate_contradiction();
             to_reduce.push(&*e.right->left);
+        }
     }
 }
 
@@ -163,8 +188,6 @@ void tableau::reduce()
 
 void tableau::reduce(tableau::entry &e)
 {
-    //std::cout << "Reducing " << e << std::endl;
-
     if (e.reduced || e.contradictory || is_propositional_letter(e.subformula))
     {
         e.reduced = true;
@@ -199,7 +222,7 @@ void tableau::reduce(tableau::entry &e)
     {
         tableau::entry &f = *entries.front();
         entries.pop();
-        if (f.is_leaf())
+        if (f.is_leaf() && !f.contradictory)
         {
             append_atomic(f, e.sign, conn, lhs, rhs);
         }
