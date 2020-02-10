@@ -14,7 +14,7 @@ enum class connective
 };
 
 connective char_to_connective(char ch);
-size_t get_precedence(connective conn);
+int get_precedence(connective conn);
 size_t split_index(const std::string &formula);
 
 #endif
