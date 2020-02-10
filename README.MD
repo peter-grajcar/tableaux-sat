@@ -4,7 +4,7 @@ SAT solver based on tableaux method.
 
 ## Install
 
-To compile the sources makefile, which is present in the repository, can be used. The executable will be placed in a build directory: `build/tableaux-sat`
+To compile the sources a makefile, which is present in the repository, can be used. The executable will be placed in a build directory: `build/tableaux-sat`
 
 ## Manual
 
@@ -34,9 +34,13 @@ The output is in the same format as in [the first part](#sat).
 
 ### 3. Dot Language Output
 
+TBD
+
 [See an example](#example-3)
 
 ### 4. Tableaux Proofs
+
+TBD
 
 [See an example](#example-4)
 
@@ -124,7 +128,9 @@ graph tableau {
 
 Image generated from the output by [graphviz](https://www.graphviz.org/):
 
-<img src="examples/example-3.png" width="200" alt="Example 1" />
+<p align="center">
+        <img src="examples/example-3.png" width="150"  alt="Example 1" />
+</p>
 
 Note that nodes on contradictory branches are marked by an asterisk.
 
@@ -143,8 +149,12 @@ PROVABLE
 
 Tableau from example 2:
 
-<img src="examples/example-2.png" width="400" alt="Example 1" />
+<p align="center">
+<img src="examples/example-2.png" width="450" alt="Example 1" />
+</p>
 
 Tableau from example 4:
 
-<img src="examples/example-4.png" width="200" alt="Example 1" />
+<p align="center">
+<img src="examples/example-4.png" width="250" alt="Example 1" />
+</p>
