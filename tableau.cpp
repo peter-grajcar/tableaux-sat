@@ -59,9 +59,9 @@ void tableau::entry::propagate_contradiction()
     }
 }
 
-tableau::tableau(bool sign, const std::string &formula)
+tableau::tableau(const std::string &formula)
 {
-    root = std::make_unique<tableau::entry>(sign, formula, nullptr);
+    root = std::make_unique<tableau::entry>(false, formula, nullptr);
     (root->subformula).erase(remove_if((root->subformula).begin(), (root->subformula).end(), isspace), root->subformula.end());
     to_reduce.push(&*root);
 }
@@ -192,8 +192,6 @@ void tableau::reduce(tableau::entry &e)
 
     std::string lhs(e.subformula, a, b);
     std::string rhs(e.subformula, c, d);
-
-    //std::cout << lhs << ',' << rhs << std::endl;
 
     std::queue<tableau::entry *> entries;
     entries.push(&e);

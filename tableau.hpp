@@ -49,7 +49,7 @@ private:
 public:
     using model = std::map<std::string, bool>;
 
-    tableau(bool sign, const std::string &formula);
+    tableau(const std::string &formula);
     void append(bool sign, const std::string &formula);
     void reduce();
     bool is_finished() const;
