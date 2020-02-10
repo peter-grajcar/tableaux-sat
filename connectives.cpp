@@ -76,3 +76,8 @@ size_t split_index(const std::string &formula)
     }
     return min_index;
 }
+
+bool is_propositional_letter(const std::string &formula)
+{
+    return formula.length() == 1;
+}

@@ -4,13 +4,17 @@ using namespace std;
 
 int main()
 {
-    tableau t(true, "(p | q) & (~q & ~p)");
+    tableau t(false, "~(p | q) = (~p & ~q)");
 
     t.reduce();
 
     t.dot_output(cout);
 
-    std::cerr << (t.is_contradictory() ? "UNSATISFIABLE" : "SATISFIABLE") << std::endl;
+    cerr << (t.is_contradictory() ? "UNSATISFIABLE" : "SATISFIABLE") << endl;
+    for (auto i : t.get_model())
+    {
+        cerr << i.first << " = " << i.second << endl;
+    }
 
     return 0;
 }

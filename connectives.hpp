@@ -18,5 +18,6 @@ enum class connective
 connective char_to_connective(char ch);
 int get_precedence(connective conn);
 size_t split_index(const std::string &formula);
+bool is_propositional_letter(const std::string &formula);
 
 #endif

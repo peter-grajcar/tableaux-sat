@@ -165,7 +165,7 @@ void tableau::reduce(tableau::entry &e)
 {
     //std::cout << "Reducing " << e << std::endl;
 
-    if (e.reduced || e.contradictory || e.subformula.length() <= 1) //TODO: chech if e is propositional letter
+    if (e.reduced || e.contradictory || is_propositional_letter(e.subformula))
     {
         e.reduced = true;
         return;
@@ -208,7 +208,7 @@ void tableau::reduce(tableau::entry &e)
         else
         {
             if (f.left)
-                entries.push(&*f.left); // !!!
+                entries.push(&*f.left);
             if (f.right)
                 entries.push(&*f.right);
         }
@@ -227,9 +227,28 @@ bool tableau::is_contradictory() const
     return root && root->contradictory;
 }
 
-std::map<std::string, bool> tableau::model() const
+tableau::model tableau::get_model() const
 {
-    //TODO:
+    tableau::model m;
+
+    if (root->contradictory)
+        return m;
+
+    tableau::entry *e = &*root;
+
+    for (;;)
+    {
+        if (is_propositional_letter(e->subformula))
+            m.emplace(e->subformula, e->sign);
+        if (e->left && !e->left->contradictory)
+            e = &*e->left;
+        else if (e->right && !e->right->contradictory)
+            e = &*e->right;
+        else
+            break;
+    }
+
+    return m;
 }
 
 void tableau::dot_output(std::ostream &os) const

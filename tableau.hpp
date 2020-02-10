@@ -7,6 +7,7 @@
 #include <queue>
 #include <map>
 #include <iostream>
+
 #ifndef TABLEAU_HPP_INCLUDED
 #define TABLEAU_HPP_INCLUDED
 
@@ -46,12 +47,14 @@ private:
     void append_atomic(entry &e, bool sign, connective conn, const std::string &lhs, const std::string &rhs);
 
 public:
+    using model = std::map<std::string, bool>;
+
     tableau(bool sign, const std::string &formula);
     void append(bool sign, const std::string &formula);
     void reduce();
     bool is_finished() const;
     bool is_contradictory() const;
-    std::map<std::string, bool> model() const;
+    model get_model() const;
 
     void dot_output(std::ostream &os) const;
 };
