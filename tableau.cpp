@@ -30,22 +30,76 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
     switch (conn)
     {
     case connective::NOT:
-
+        e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
         break;
     case connective::AND:
-
+        if (sign)
+        {
+            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+        }
+        else
+        {
+            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
+            e.right = std::make_unique<tableau::entry>(sign, rhs, &e);
+        }
         break;
     case connective::OR:
-
+        if (sign)
+        {
+            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
+            e.right = std::make_unique<tableau::entry>(sign, rhs, &e);
+        }
+        else
+        {
+            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+        }
         break;
     case connective::IF:
-
+        if (sign)
+        {
+            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
+            e.right = std::make_unique<tableau::entry>(sign, rhs, &e);
+        }
+        else
+        {
+            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+        }
         break;
     case connective::IFF:
-
+        if (sign)
+        {
+            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
+            e.left->left = std::make_unique<tableau::entry>(!sign, rhs, &e.left);
+            e.right = std::make_unique<tableau::entry>(sign, lhs, &e);
+            e.right->left = std::make_unique<tableau::entry>(sign, rhs, &e.right);
+        }
+        else
+        {
+            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+            e.right = std::make_unique<tableau::entry>(sign, lhs, &e);
+            e.right->left = std::make_unique<tableau::entry>(!sign, rhs, &e.right);
+        }
         break;
     default:
         break;
+    }
+
+    // Add newly created entries to the queue for reduction
+    if (e.left)
+    {
+        to_reduce.push(&*e.left);
+        if (e.left->left)
+            to_reduce.push(&*e.left->left);
+    }
+    if (e.right)
+    {
+        to_reduce.push(&*e.right);
+        if (e.right->left)
+            to_reduce.push(&*e.right->left);
     }
 }
 
