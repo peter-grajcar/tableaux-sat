@@ -58,7 +58,7 @@ Input format:
 
 ### <a name="example-1"></a>1. Satisfiability of a Formula
 
-```bash
+```txt
 $ tableaux-sat
 p & ~p
 ```
@@ -69,7 +69,7 @@ UNSATISFIABLE
 
 ### <a name="example-2"></a>2. Satisfiability of a Theory
 
-```bash
+```txt
 $ tableaux-sat -T
 s
 q - p
@@ -86,7 +86,7 @@ s = 1
 
 ### <a name="example-3"></a>3. Dot Language Output
 
-```bash
+```txt
 $ tableaux-sat -T --dot
 p
 ~q
@@ -130,12 +130,12 @@ Note that nodes on contradictory branches are marked by an asterisk.
 
 ### <a name="example-4"></a>4. Tableaux Proofs
 
-```
+```txt
 $ tableaux-sat --proof
 ~(p | q) = (~p & ~q)
 ```
 
-```
+```txt
 PROVABLE
 ```
 
@@ -143,7 +143,7 @@ PROVABLE
 
 Tableau from example 2:
 
-<img src="examples/example-2.png" width="200" alt="Example 1" />
+<img src="examples/example-2.png" width="400" alt="Example 1" />
 
 Tableau from example 4:
 
