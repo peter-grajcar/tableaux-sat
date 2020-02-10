@@ -9,6 +9,9 @@
 tableau::entry::entry(bool sign, const std::string &subformula, entry *parent)
     : sign(sign), subformula(subformula), parent(parent), left(nullptr), right(nullptr), contradictory(false)
 {
+    contradictory = is_contradictory();
+    if (contradictory)
+        propagate_contradiction();
 }
 
 bool tableau::entry::is_leaf() const
@@ -16,11 +19,50 @@ bool tableau::entry::is_leaf() const
     return !left && !right;
 }
 
-tableau::tableau(const std::string &formula)
+bool tableau::entry::is_contradictory() const
 {
-    root = std::make_unique<tableau::entry>(false, formula, nullptr);
+    tableau::entry *f = parent;
+    while (f)
+    {
+        if (sign != f->sign && subformula == f->subformula)
+            return true;
+        f = f->parent;
+    }
+    return false;
+}
+
+void tableau::entry::propagate_contradiction()
+{
+    tableau::entry *f = parent;
+    while (f)
+    {
+        if (f->left && f->right)
+        {
+            if (f->left->contradictory && f->right->contradictory)
+                f->contradictory = true;
+            else
+                break;
+        }
+        else if (f->left && !f->right)
+        {
+            if (f->left->contradictory)
+                f->contradictory = true;
+            else
+                break;
+        }
+        else
+        {
+            break;
+        }
+
+        f = f->parent;
+    }
+}
+
+tableau::tableau(bool sign, const std::string &formula)
+{
+    root = std::make_unique<tableau::entry>(sign, formula, nullptr);
     (root->subformula).erase(remove_if((root->subformula).begin(), (root->subformula).end(), isspace), root->subformula.end());
-    //std::cout << *root << std::endl;
     to_reduce.push(&*root);
 }
 
@@ -95,12 +137,14 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
     // Add newly created entries to the queue for reduction
     if (e.left)
     {
+        e.left->propagate_contradiction();
         to_reduce.push(&*e.left);
         if (e.left->left)
             to_reduce.push(&*e.left->left);
     }
     if (e.right)
     {
+        e.right->propagate_contradiction();
         to_reduce.push(&*e.right);
         if (e.right->left)
             to_reduce.push(&*e.right->left);

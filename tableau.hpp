@@ -29,10 +29,12 @@ private:
     public:
         entry(bool sign, const std::string &subformula, entry *parent);
         bool is_leaf() const;
+        bool is_contradictory() const;
+        void propagate_contradiction();
 
         friend std::ostream &operator<<(std::ostream &os, const entry &e)
         {
-            return os << (e.sign ? 'T' : 'F') << '(' << e.subformula << ')';
+            return os << (e.sign ? 'T' : 'F') << '(' << e.subformula << ')' << (e.contradictory ? '*' : ' ');
         }
     };
 
@@ -44,7 +46,7 @@ private:
     void append_atomic(entry &e, bool sign, connective conn, const std::string &lhs, const std::string &rhs);
 
 public:
-    tableau(const std::string &formula);
+    tableau(bool sign, const std::string &formula);
     void append(bool sign, const std::string &formula);
     void reduce();
     bool is_finished() const;
