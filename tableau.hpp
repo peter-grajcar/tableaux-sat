@@ -6,6 +6,7 @@
 #include <string>
 #include <queue>
 #include <map>
+#include <iostream>
 #ifndef TABLEAU_HPP_INCLUDED
 #define TABLEAU_HPP_INCLUDED
 
@@ -28,6 +29,11 @@ private:
     public:
         entry(bool sign, const std::string &subformula, entry *parent);
         bool is_leaf() const;
+
+        friend std::ostream &operator<<(std::ostream &os, const entry &e)
+        {
+            return os << (e.sign ? 'T' : 'F') << '(' << e.subformula << ')';
+        }
     };
 
 private:
@@ -44,6 +50,8 @@ public:
     bool is_finished() const;
     bool is_contradictory() const;
     std::map<std::string, bool> model() const;
+
+    void dot_output(std::ostream &os) const;
 };
 
 #endif

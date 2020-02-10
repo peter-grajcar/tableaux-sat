@@ -4,7 +4,7 @@ CXXFLAGS    := -g --std=c++17
 BUILDDIR	:= build
 OBJSDIR		:= $(BUILDDIR)/obj
 
-SRCS=tableau.cpp sat.cpp
+SRCS=tableau.cpp sat.cpp connectives.cpp
 OBJS := $(SRCS:%.cpp=$(OBJSDIR)/%.o)
 
 all: tableaux-sat

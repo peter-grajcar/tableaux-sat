@@ -74,4 +74,5 @@ size_t split_index(const std::string &formula)
             }
         }
     }
+    return min_index;
 }

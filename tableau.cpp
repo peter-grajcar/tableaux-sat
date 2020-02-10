@@ -3,6 +3,8 @@
 #include <string>
 #include <memory>
 #include <queue>
+#include <stack>
+#include <iostream>
 
 tableau::entry::entry(bool sign, const std::string &subformula, entry *parent)
     : sign(sign), subformula(subformula), parent(parent), left(nullptr), right(nullptr), contradictory(false)
@@ -36,7 +38,7 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
         if (sign)
         {
             e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
         }
         else
         {
@@ -53,7 +55,7 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
         else
         {
             e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
         }
         break;
     case connective::IF:
@@ -65,23 +67,23 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
         else
         {
             e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
         }
         break;
     case connective::IFF:
         if (sign)
         {
             e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(!sign, rhs, &e.left);
+            e.left->left = std::make_unique<tableau::entry>(!sign, rhs, &*e.left);
             e.right = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.right->left = std::make_unique<tableau::entry>(sign, rhs, &e.right);
+            e.right->left = std::make_unique<tableau::entry>(sign, rhs, &*e.right);
         }
         else
         {
             e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &e.left);
+            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
             e.right = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.right->left = std::make_unique<tableau::entry>(!sign, rhs, &e.right);
+            e.right->left = std::make_unique<tableau::entry>(!sign, rhs, &*e.right);
         }
         break;
     default:
@@ -126,7 +128,7 @@ void tableau::reduce(tableau::entry &e)
 
     std::queue<tableau::entry *> entries;
     entries.push(&e);
-    while (entries.empty())
+    while (!entries.empty())
     {
         tableau::entry &f = *entries.front();
         entries.pop();
@@ -159,4 +161,66 @@ bool tableau::is_contradictory() const
 std::map<std::string, bool> tableau::model() const
 {
     //TODO:
+}
+
+void tableau::dot_output(std::ostream &os) const
+{
+    using namespace std;
+
+    os << "graph tableau {" << endl
+       << "\tnode[shape=\"plaintext\", fontname=\"courier\"]" << endl
+       << "\tnodesep=0.4" << endl
+       << "\tranksep=0.5" << endl;
+
+    stack<const tableau::entry *> entries;
+    map<const tableau::entry *, size_t> ids;
+
+    size_t id_counter = 1;
+
+    entries.push(root.get());
+    ids.emplace(root.get(), id_counter++);
+    while (!entries.empty())
+    {
+        const tableau::entry *e = entries.top();
+        entries.pop();
+
+        if (ids.find(e) == ids.end())
+            ids.emplace(e, id_counter++);
+
+        os << endl
+           << "\tE" << ids[e] << "[label=\"" << *e << "\"]" << endl;
+
+        if (e->left != nullptr)
+        {
+            if (ids.find(&*e->left) == ids.end())
+                ids.emplace(&*e->left, id_counter++);
+
+            os << "\tE" << ids[e] << " -- E" << ids[&*e->left] << endl;
+            entries.push(e->left.get());
+        }
+        if (e->left != nullptr && e->right != nullptr)
+        {
+            if (ids.find(&*e->left) == ids.end())
+                ids.emplace(&*e->left, id_counter++);
+            if (ids.find(&*e->right) == ids.end())
+                ids.emplace(&*e->right, id_counter++);
+
+            os << "\t//hidden node to balance the tree" << endl
+               << "\tE" << ids[e] << "hidden [label=\"\", width=.1, style=invis]" << endl
+               << "\t{rank=same;E" << ids[e] << "hidden; E" << ids[&*e->left] << "; E" << ids[&*e->right] << '}' << endl
+               << "\tE" << ids[e] << " -- E" << ids[e] << "hidden[style=invis]" << endl;
+            /*<< "\tE" << e->left->id << " -- E" << ids[&e] << "hidden --"
+               << "\tE" << e->right->id << " [style=invis]" << endl;*/
+        }
+        if (e->right != nullptr)
+        {
+            if (ids.find(&*e->right) == ids.end())
+                ids.emplace(&*e->right, id_counter++);
+
+            os << "\tE" << ids[e] << " -- E" << ids[&*e->right] << endl;
+            entries.push(e->right.get());
+        }
+    }
+
+    os << '}' << endl;
 }

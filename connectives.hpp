@@ -1,3 +1,5 @@
+#include <string>
+
 #ifndef CONNECTIVES_INCLUDED
 #define CONNECTIVES_INCLUDED
 
