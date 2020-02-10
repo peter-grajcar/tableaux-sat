@@ -46,7 +46,7 @@ The output is in the same format as in [the first part](#sat).
 | :----: | :--------: | :------: |
 |  `~`   |  not (¬)   |    1     |
 |  `&`   |  and (∧)   |    2     |
-|  `|`   |   or (∨)   |    2     |
+|  `\|`  |   or (∨)   |    2     |
 |  `-`   |   if (→)   |    3     |
 |  `=`   |  iff (↔)   |    3     |
 
