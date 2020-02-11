@@ -2,6 +2,10 @@
 #include <string>
 #include <climits>
 
+/**
+ * Converts a character to connective. Returns connective::UNKNOWN
+ * if the character does not match any connective.
+ */
 connective char_to_connective(char ch)
 {
     switch (ch)
@@ -25,6 +29,9 @@ connective char_to_connective(char ch)
     }
 }
 
+/**
+ * Returns the precedence of given connective.
+ */
 int get_precedence(connective conn)
 {
     switch (conn)
@@ -48,6 +55,10 @@ int get_precedence(connective conn)
     }
 }
 
+/**
+ * Returns an index of a connective with least precedence in 
+ * given formula.
+ */
 size_t split_index(const std::string &formula)
 {
     size_t min_index = 0;
@@ -77,7 +88,13 @@ size_t split_index(const std::string &formula)
     return min_index;
 }
 
+/**
+ * Returns true if a formula is a valid propositional letter.
+ */
 bool is_propositional_letter(const std::string &formula)
 {
-    return formula.length() == 1;
+    for (auto i : formula)
+        if (!isalnum(i))
+            return false;
+    return true;
 }

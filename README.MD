@@ -29,7 +29,7 @@ A tableau can be constructed inductively:
 1. Every atomic tableau is a tableau
 2. If _T_ is a tableau and _E_ is an entry of _T_ of maximal depth such that there is a noncontradictory path _P_ of _T_ on which _E_ is unreduced, then if _T'_ is the tableau gotten by adjoining the unique atomic tableau with root E to the end of every noncontradictory path _P'_ of _T_ on which _E_ is unreduced, then _T'_ is a tableau.
 
-**References:**
+**Reference:**
 
 Nerode, A., & Shore, R. A. (1997). _Logic for applications_. New York: Springer.
 
@@ -79,17 +79,17 @@ Proof mode can be set with options `-p` or `--proof`. In proof mode the root ent
 
 | Symbol | Connective | Priority |
 | :----: | :--------: | :------: |
-|  `~`   |  not (¬)   |    1     |
+|  `~`   |  not (¬)   |    3     |
 |  `&`   |  and (∧)   |    2     |
 |  `\|`  |   or (∨)   |    2     |
-|  `-`   |   if (→)   |    3     |
-|  `=`   |  iff (↔)   |    3     |
+|  `-`   |   if (→)   |    1     |
+|  `=`   |  iff (↔)   |    1     |
 
 Priority can be modified using parantheses `(`, `)`.
 
 ## <a name="examples"></a>Examples
 
-Input format:
+All examples can be executed by running `demo.sh`.
 
 ### <a name="example-1"></a>1. Satisfiability of a Formula
 
