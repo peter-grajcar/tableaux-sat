@@ -75,7 +75,7 @@ Proof mode can be set with options `-p` or `--proof`. In proof mode the root ent
 
 [See an example](#example-4)
 
-### <a name="connectives"></a>Connectives
+### <a name="connectives"></a>5. Connectives
 
 | Symbol | Connective | Priority |
 | :----: | :--------: | :------: |
