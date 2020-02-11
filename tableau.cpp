@@ -11,15 +11,20 @@ tableau::entry::entry(bool sign, const std::string &subformula, entry *parent)
 {
     reduced = is_propositional_letter(subformula);
     contradictory = is_contradictory() || (parent && parent->contradictory);
-    if (contradictory)
-        propagate_contradiction();
 }
 
+/**
+ * Returns true if the entry has no children.
+ */
 bool tableau::entry::is_leaf() const
 {
     return !left && !right;
 }
 
+/**
+ * Returns true if a path from this entry to the root contains
+ * contradiction with this entry.
+ */
 bool tableau::entry::is_contradictory() const
 {
     tableau::entry *f = parent;
@@ -32,6 +37,10 @@ bool tableau::entry::is_contradictory() const
     return false;
 }
 
+/**
+ * Propagates the contradiction property of the entries on a path
+ * from this entry to the root of the tableau.
+ */
 void tableau::entry::propagate_contradiction()
 {
     tableau::entry *f = parent;
@@ -60,6 +69,10 @@ void tableau::entry::propagate_contradiction()
     }
 }
 
+/**
+ * Constructs a new tableau with given formula in its root with given
+ * sign.
+ */
 tableau::tableau(bool sign, const std::string &formula)
 {
     root = std::make_unique<tableau::entry>(sign, formula, nullptr);
@@ -67,6 +80,10 @@ tableau::tableau(bool sign, const std::string &formula)
         to_reduce.push(&*root);
 }
 
+/**
+ * Appends new entries to each non-contradictory branch of the tableau.
+ * The entries are defined by sign and formula.
+ */
 void tableau::append(bool sign, const std::string &formula)
 {
     std::queue<tableau::entry *> entries;
@@ -75,7 +92,7 @@ void tableau::append(bool sign, const std::string &formula)
     {
         tableau::entry &f = *entries.front();
         entries.pop();
-        if (f.is_leaf())
+        if (f.is_leaf() && !f.contradictory)
         {
             f.left = std::make_unique<tableau::entry>(sign, formula, &f);
             to_reduce.push(&*f.left);
@@ -90,6 +107,10 @@ void tableau::append(bool sign, const std::string &formula)
     }
 }
 
+/**
+ * Appends an atomic tableau to the entry e. The atomic tableau is chosen by sign and connective.
+ * New entries are created using left and right hand side of the connective (lhs, rhs).
+ */
 void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const std::string &lhs, const std::string &rhs)
 {
     switch (conn)
@@ -154,6 +175,7 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
     }
 
     // Add newly created entries to the queue for reduction
+    // and propagate the contradiction.
     if (e.left)
     {
         e.left->propagate_contradiction();
@@ -176,6 +198,9 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
     }
 }
 
+/**
+ * Reduces the tableau.
+ */
 void tableau::reduce()
 {
     while (!to_reduce.empty())
@@ -186,6 +211,9 @@ void tableau::reduce()
     }
 }
 
+/**
+ * Reduces a single entry of the tableau.
+ */
 void tableau::reduce(tableau::entry &e)
 {
     if (e.reduced || e.contradictory || is_propositional_letter(e.subformula))
@@ -228,9 +256,9 @@ void tableau::reduce(tableau::entry &e)
         }
         else
         {
-            if (f.left)
+            if (f.left && !f.left->contradictory)
                 entries.push(&*f.left);
-            if (f.right)
+            if (f.right && !f.right->contradictory)
                 entries.push(&*f.right);
         }
     }
@@ -238,16 +266,28 @@ void tableau::reduce(tableau::entry &e)
     e.reduced = true;
 }
 
+/**
+ * Returns true if there are no entries to reduce left 
+ * in the tableau, i.e. the tableau is finished.
+ */
 bool tableau::is_finished() const
 {
     return to_reduce.empty();
 }
 
+/**
+ * Returns true if every path from the root to the arbitrary leaf 
+ * is cotradictory, i.e. the tableau is contraddictory.
+ */
 bool tableau::is_contradictory() const
 {
     return root && root->contradictory;
 }
 
+/**
+ * Returns the model. If the tableau is contradictory an empty
+ * model will be returned.
+ */
 tableau::model tableau::get_model() const
 {
     tableau::model m;
@@ -272,6 +312,9 @@ tableau::model tableau::get_model() const
     return m;
 }
 
+/**
+ * Outputs the tableau in a dot language format.
+ */
 void tableau::dot_output(std::ostream &os) const
 {
     using namespace std;

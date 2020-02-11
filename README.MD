@@ -1,14 +1,45 @@
 # Tableaux SAT
 
-SAT solver based on tableaux method.
+SAT solver based on tableaux method
 
-## Install
+- [Install](#install)
+- [Manual](#manual)
+- [Examples](#examples)
+
+## Tableaux Method
+
+Following part contains basic definitions for those unfamiliar with the tableaux method.
+
+A tableau is a labeled binary tree. The nodes of this tree are called _entries_. Each entry is labeled with a signed propositions (i.e. proposition preceded by either a _T_ or an _F_).
+
+A tableau proof of a proposition _A_ is a contradictory tableau with root entry _F(A)_. A tableau refutation for a proposition _A_ is a contradictory tableau with root entry _T(A)_
+
+Entry _E_ has been reduced on _P_ if all the entries on one path through the atomic tableau with root _E_ occur on _P_.
+
+Atomic tableaux:
+
+|                                                            |                                                            |                                                            |                                                            |
+| :--------------------------------------------------------: | :--------------------------------------------------------: | :--------------------------------------------------------: | :--------------------------------------------------------: |
+| <img src="examples/1a.png" height="25" alt="Tableau 1a" /> | <img src="examples/1b.png" height="25" alt="Tableau 1b" /> | <img src="examples/2a.png" height="50" alt="Tableau 2a" /> | <img src="examples/2b.png" height="75" alt="Tableau 2b" /> |
+| <img src="examples/3a.png" height="50" alt="Tableau 3a" /> | <img src="examples/3b.png" height="50" alt="Tableau 3b" /> | <img src="examples/4a.png" height="75" alt="Tableau 4a" /> | <img src="examples/4b.png" height="50" alt="Tableau 4b" /> |
+| <img src="examples/5a.png" height="50" alt="Tableau 5a" /> | <img src="examples/5b.png" height="75" alt="Tableau 5b" /> | <img src="examples/6a.png" height="75" alt="Tableau 6a" /> | <img src="examples/6b.png" height="75" alt="Tableau 6b" /> |
+
+A tableau can be constructed inductively:
+
+1. Every atomic tableau is a tableau
+2. If _T_ is a tableau and _E_ is an entry of _T_ of maximal depth such that there is a noncontradictory path _P_ of _T_ on which _E_ is unreduced, then if _T'_ is the tableau gotten by adjoining the unique atomic tableau with root E to the end of every noncontradictory path _P'_ of _T_ on which _E_ is unreduced, then _T'_ is a tableau.
+
+**References:**
+
+Nerode, A., & Shore, R. A. (1997). _Logic for applications_. New York: Springer.
+
+## <a name="install"></a>Install
 
 To compile the sources a makefile, which is present in the repository, can be used. The executable will be placed in a build directory: `build/tableaux-sat`
 
-## Manual
+## <a name="manual"></a>Manual
 
-`tableaux-sat [-T] [--dot]`
+`tableaux-sat [-Tdp] [--dot] [--proof]`
 
 ### <a name="sat"></a>1. Satisfiability of a Formula
 
@@ -27,24 +58,24 @@ The leftmost non-contradictory branch of the tableau is taken as a model.
 
 Theory mode is enabled by option `-T`.
 
-Input format: Each formula is on separate line. The first line contains a formula to prove in the theory. Following line contain axioms of the theory.
+Input format: Each formula is on separate line. The first line contains a formula to prove in the theory. Following line contain axioms of the theory. These axioms will be signed with _T_.
 The output is in the same format as in [the first part](#sat).
 
 [See an example](#example-2)
 
 ### 3. Dot Language Output
 
-TBD
+The program will output the tableau in the dot language format when `-d` or `--dot` options are set. The output can be used with a program such as [graphviz](https://www.graphviz.org/) to generate an image.
 
 [See an example](#example-3)
 
 ### 4. Tableaux Proofs
 
-TBD
+Proof mode can be set with options `-p` or `--proof`. In proof mode the root entry will be signed with _F_.
 
 [See an example](#example-4)
 
-## <a name="connectives"></a>Connectives
+### <a name="connectives"></a>Connectives
 
 | Symbol | Connective | Priority |
 | :----: | :--------: | :------: |
@@ -56,7 +87,7 @@ TBD
 
 Priority can be modified using parantheses `(`, `)`.
 
-## Examples
+## <a name="examples"></a>Examples
 
 Input format:
 
