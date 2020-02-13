@@ -67,6 +67,8 @@ The output is in the same format as in [the first part](#sat).
 
 The program will output the tableau in the dot language format when `-d` or `--dot` options are set. The output can be used with a program such as [graphviz](https://www.graphviz.org/) to generate an image.
 
+Contradictory branches are marked with an astersisk `*`.
+
 [See an example](#example-3)
 
 ### 4. Tableaux Proofs

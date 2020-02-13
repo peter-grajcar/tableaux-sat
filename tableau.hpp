@@ -1,6 +1,3 @@
-/***
- * 
- ***/
 #include "connectives.hpp"
 #include <memory>
 #include <string>
