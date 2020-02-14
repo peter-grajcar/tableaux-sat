@@ -3,6 +3,7 @@
 #include <string>
 #include <queue>
 #include <map>
+#include <list>
 #include <iostream>
 
 #ifndef TABLEAU_HPP_INCLUDED
@@ -26,6 +27,11 @@ private:
 
     public:
         entry(bool sign, const std::string &subformula, entry *parent);
+        entry(const entry &e) = delete;
+        entry(entry &&e) = delete;
+        entry operator=(const entry &e) = delete;
+        entry operator=(entry &&e) = delete;
+
         bool is_leaf() const;
         bool is_contradictory() const;
         void propagate_contradiction();
@@ -47,6 +53,11 @@ public:
     using model = std::map<std::string, bool>;
 
     tableau(bool sign, const std::string &formula);
+    tableau(const tableau &e) = delete;
+    tableau(tableau &&e) = delete;
+    tableau operator=(const tableau &e) = delete;
+    tableau operator=(tableau &&e) = delete;
+
     void append(bool sign, const std::string &formula);
     void reduce();
     bool is_finished() const;
