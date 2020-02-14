@@ -6,11 +6,11 @@
 #include <stack>
 #include <iostream>
 
-tableau::entry::entry(bool sign, const std::string &subformula, entry *parent)
-    : sign(sign), subformula(subformula), parent(parent), left(nullptr), right(nullptr), contradictory(false), reduced(false)
+tableau::entry::entry(std::list<tableau::entry> &tree, bool sign, const std::string &subformula, tableau::index parent)
+    : tree(tree), sign(sign), subformula(subformula), parent(parent), left(tree.end()), right(tree.end()), contradictory(false), reduced(false)
 {
     reduced = is_propositional_letter(subformula);
-    contradictory = is_contradictory() || (parent && parent->contradictory);
+    contradictory = is_contradictory() || (parent != tree.end() && parent->contradictory);
 }
 
 /**
@@ -18,7 +18,7 @@ tableau::entry::entry(bool sign, const std::string &subformula, entry *parent)
  */
 bool tableau::entry::is_leaf() const
 {
-    return !left && !right;
+    return left == tree.end() && right == tree.end();
 }
 
 /**
@@ -27,8 +27,8 @@ bool tableau::entry::is_leaf() const
  */
 bool tableau::entry::is_contradictory() const
 {
-    tableau::entry *f = parent;
-    while (f)
+    tableau::index f = parent;
+    while (f != tree.end())
     {
         if (sign != f->sign && subformula == f->subformula)
             return true;
@@ -43,17 +43,17 @@ bool tableau::entry::is_contradictory() const
  */
 void tableau::entry::propagate_contradiction()
 {
-    tableau::entry *f = parent;
-    while (f)
+    tableau::index f = parent;
+    while (f != tree.end())
     {
-        if (f->left && f->right)
+        if (f->left != tree.end() && f->right != tree.end())
         {
             if (f->left->contradictory && f->right->contradictory)
                 f->contradictory = true;
             else
                 break;
         }
-        else if (f->left && !f->right)
+        else if (f->left != tree.end() && f->right == tree.end())
         {
             if (f->left->contradictory)
                 f->contradictory = true;
@@ -75,9 +75,11 @@ void tableau::entry::propagate_contradiction()
  */
 tableau::tableau(bool sign, const std::string &formula)
 {
-    root = std::make_unique<tableau::entry>(sign, formula, nullptr);
+    tree.emplace_back(tree, sign, formula, tree.end());
+    root = std::prev(tree.end());
+
     if (!is_propositional_letter(formula))
-        to_reduce.push(&*root);
+        to_reduce.push(root);
 }
 
 /**
@@ -86,23 +88,24 @@ tableau::tableau(bool sign, const std::string &formula)
  */
 void tableau::append(bool sign, const std::string &formula)
 {
-    std::queue<tableau::entry *> entries;
-    entries.push(&*root);
+    std::queue<tableau::index> entries;
+    entries.push(root);
     while (!entries.empty())
     {
-        tableau::entry &f = *entries.front();
+        tableau::index f = entries.front();
         entries.pop();
-        if (f.is_leaf() && !f.contradictory)
+        if (f->is_leaf() && !f->contradictory)
         {
-            f.left = std::make_unique<tableau::entry>(sign, formula, &f);
-            to_reduce.push(&*f.left);
+            tree.emplace_back(tree, sign, formula, f);
+            f->left = std::prev(tree.end());
+            to_reduce.push(f->left);
         }
         else
         {
-            if (f.left)
-                entries.push(&*f.left);
-            if (f.right)
-                entries.push(&*f.right);
+            if (f->left != tree.end())
+                entries.push(f->left);
+            if (f->right != tree.end())
+                entries.push(f->right);
         }
     }
 }
@@ -111,63 +114,84 @@ void tableau::append(bool sign, const std::string &formula)
  * Appends an atomic tableau to the entry e. The atomic tableau is chosen by sign and connective.
  * New entries are created using left and right hand side of the connective (lhs, rhs).
  */
-void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const std::string &lhs, const std::string &rhs)
+void tableau::append_atomic(tableau::index e, bool sign, connective conn, const std::string &lhs, const std::string &rhs)
 {
     switch (conn)
     {
     case connective::NOT:
-        e.left = std::make_unique<tableau::entry>(!sign, rhs, &e);
+        tree.emplace_back(tree, !sign, rhs, e);
+        e->left = std::prev(tree.end());
         break;
     case connective::AND:
         if (sign)
         {
-            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
+            tree.emplace_back(tree, sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e->left);
+            e->left->left = std::prev(tree.end());
         }
         else
         {
-            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.right = std::make_unique<tableau::entry>(sign, rhs, &e);
+            tree.emplace_back(tree, sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e);
+            e->right = std::prev(tree.end());
         }
         break;
     case connective::OR:
         if (sign)
         {
-            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.right = std::make_unique<tableau::entry>(sign, rhs, &e);
+            tree.emplace_back(tree, sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e);
+            e->right = std::prev(tree.end());
         }
         else
         {
-            e.left = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
+            tree.emplace_back(tree, sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e->left);
+            e->left->left = std::prev(tree.end());
         }
         break;
     case connective::IF:
         if (sign)
         {
-            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.right = std::make_unique<tableau::entry>(sign, rhs, &e);
+            tree.emplace_back(tree, !sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e);
+            e->right = std::prev(tree.end());
         }
         else
         {
-            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
+            tree.emplace_back(tree, !sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e->left);
+            e->left->left = std::prev(tree.end());
         }
         break;
     case connective::IFF:
         if (sign)
         {
-            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(!sign, rhs, &*e.left);
-            e.right = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.right->left = std::make_unique<tableau::entry>(sign, rhs, &*e.right);
+            tree.emplace_back(tree, !sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, !sign, rhs, e->left);
+            e->left->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, lhs, e);
+            e->right = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e->right);
+            e->right->left = std::prev(tree.end());
         }
         else
         {
-            e.left = std::make_unique<tableau::entry>(!sign, lhs, &e);
-            e.left->left = std::make_unique<tableau::entry>(sign, rhs, &*e.left);
-            e.right = std::make_unique<tableau::entry>(sign, lhs, &e);
-            e.right->left = std::make_unique<tableau::entry>(!sign, rhs, &*e.right);
+            tree.emplace_back(tree, !sign, lhs, e);
+            e->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, rhs, e->left);
+            e->left->left = std::prev(tree.end());
+            tree.emplace_back(tree, sign, lhs, e);
+            e->right = std::prev(tree.end());
+            tree.emplace_back(tree, !sign, rhs, e->right);
+            e->right->left = std::prev(tree.end());
         }
         break;
     default:
@@ -176,24 +200,24 @@ void tableau::append_atomic(tableau::entry &e, bool sign, connective conn, const
 
     // Add newly created entries to the queue for reduction
     // and propagate the contradiction.
-    if (e.left)
+    if (e->left != tree.end())
     {
-        e.left->propagate_contradiction();
-        to_reduce.push(&*e.left);
-        if (e.left->left)
+        e->left->propagate_contradiction();
+        to_reduce.push(e->left);
+        if (e->left->left != tree.end())
         {
-            e.left->left->propagate_contradiction();
-            to_reduce.push(&*e.left->left);
+            e->left->left->propagate_contradiction();
+            to_reduce.push(e->left->left);
         }
     }
-    if (e.right)
+    if (e->right != tree.end())
     {
-        e.right->propagate_contradiction();
-        to_reduce.push(&*e.right);
-        if (e.right->left)
+        e->right->propagate_contradiction();
+        to_reduce.push(e->right);
+        if (e->right->left != tree.end())
         {
-            e.right->left->propagate_contradiction();
-            to_reduce.push(&*e.right->left);
+            e->right->left->propagate_contradiction();
+            to_reduce.push(e->right->left);
         }
     }
 }
@@ -205,7 +229,7 @@ void tableau::reduce()
 {
     while (!to_reduce.empty())
     {
-        tableau::entry &e = *to_reduce.front();
+        tableau::index e = to_reduce.front();
         to_reduce.pop();
         reduce(e);
     }
@@ -214,56 +238,56 @@ void tableau::reduce()
 /**
  * Reduces a single entry of the tableau.
  */
-void tableau::reduce(tableau::entry &e)
+void tableau::reduce(tableau::index e)
 {
-    if (e.reduced || e.contradictory || is_propositional_letter(e.subformula))
+    if (e->reduced || e->contradictory || is_propositional_letter(e->subformula))
     {
-        e.reduced = true;
+        e->reduced = true;
         return;
     }
 
-    size_t conn_index = split_index(e.subformula);
-    connective conn = char_to_connective(e.subformula[conn_index]);
+    size_t conn_index = split_index(e->subformula);
+    connective conn = char_to_connective(e->subformula[conn_index]);
 
     // Split the subformula into two
     size_t a, b, c, d;
-    size_t len = e.subformula.length();
+    size_t len = e->subformula.length();
     a = 0;
-    if (e.subformula[0] == '(')
+    if (e->subformula[0] == '(')
         ++a;
     b = conn_index - a;
-    if (e.subformula[b] == ')')
+    if (e->subformula[b] == ')')
         --b;
     c = conn_index + 1;
-    if (e.subformula[c] == '(')
+    if (e->subformula[c] == '(')
         ++c;
     d = len - c;
-    if (e.subformula[c + d - 1] == ')')
+    if (e->subformula[c + d - 1] == ')')
         d--;
 
-    std::string lhs(e.subformula, a, b);
-    std::string rhs(e.subformula, c, d);
+    std::string lhs(e->subformula, a, b);
+    std::string rhs(e->subformula, c, d);
 
-    std::queue<tableau::entry *> entries;
-    entries.push(&e);
+    std::queue<tableau::index> entries;
+    entries.push(e);
     while (!entries.empty())
     {
-        tableau::entry &f = *entries.front();
+        tableau::index f = entries.front();
         entries.pop();
-        if (f.is_leaf() && !f.contradictory)
+        if (f->is_leaf() && !f->contradictory)
         {
-            append_atomic(f, e.sign, conn, lhs, rhs);
+            append_atomic(f, e->sign, conn, lhs, rhs);
         }
         else
         {
-            if (f.left && !f.left->contradictory)
-                entries.push(&*f.left);
-            if (f.right && !f.right->contradictory)
-                entries.push(&*f.right);
+            if (f->left != tree.end() && !f->left->contradictory)
+                entries.push(f->left);
+            if (f->right != tree.end() && !f->right->contradictory)
+                entries.push(f->right);
         }
     }
 
-    e.reduced = true;
+    e->reduced = true;
 }
 
 /**
@@ -281,7 +305,7 @@ bool tableau::is_finished() const
  */
 bool tableau::is_contradictory() const
 {
-    return root && root->contradictory;
+    return root != tree.end() && root->contradictory;
 }
 
 /**
@@ -295,16 +319,16 @@ tableau::model tableau::get_model() const
     if (root->contradictory)
         return m;
 
-    tableau::entry *e = &*root;
+    tableau::index e = root;
 
     for (;;)
     {
         if (is_propositional_letter(e->subformula))
             m.emplace(e->subformula, e->sign);
-        if (e->left && !e->left->contradictory)
-            e = &*e->left;
-        else if (e->right && !e->right->contradictory)
-            e = &*e->right;
+        if (e->left != tree.end() && !e->left->contradictory)
+            e = e->left;
+        else if (e->right != tree.end() && !e->right->contradictory)
+            e = e->right;
         else
             break;
     }
@@ -324,33 +348,33 @@ void tableau::dot_output(std::ostream &os) const
        << "\tnodesep=0.4" << endl
        << "\tranksep=0.5" << endl;
 
-    stack<const tableau::entry *> entries;
-    map<const tableau::entry *, size_t> ids;
+    stack<tableau::index> entries;
+    map<tableau::entry *, size_t> ids;
 
     size_t id_counter = 1;
 
-    entries.push(root.get());
-    ids.emplace(root.get(), id_counter++);
+    entries.push(root);
+    ids.emplace(&*root, id_counter++);
     while (!entries.empty())
     {
-        const tableau::entry *e = entries.top();
+        tableau::index e = entries.top();
         entries.pop();
 
-        if (ids.find(e) == ids.end())
-            ids.emplace(e, id_counter++);
+        if (ids.find(&*e) == ids.end())
+            ids.emplace(&*e, id_counter++);
 
         os << endl
-           << "\tE" << ids[e] << "[label=\"" << *e << "\"]" << endl;
+           << "\tE" << ids[&*e] << "[label=\"" << *e << "\"]" << endl;
 
-        if (e->left != nullptr)
+        if (e->left != tree.end())
         {
             if (ids.find(&*e->left) == ids.end())
                 ids.emplace(&*e->left, id_counter++);
 
-            os << "\tE" << ids[e] << " -- E" << ids[&*e->left] << endl;
-            entries.push(e->left.get());
+            os << "\tE" << ids[&*e] << " -- E" << ids[&*e->left] << endl;
+            entries.push(e->left);
         }
-        if (e->left != nullptr && e->right != nullptr)
+        if (e->left != tree.end() && e->right != tree.end())
         {
             if (ids.find(&*e->left) == ids.end())
                 ids.emplace(&*e->left, id_counter++);
@@ -358,19 +382,19 @@ void tableau::dot_output(std::ostream &os) const
                 ids.emplace(&*e->right, id_counter++);
 
             os << "\t//hidden node to balance the tree" << endl
-               << "\tE" << ids[e] << "hidden [label=\"\", width=.1, style=invis]" << endl
-               << "\t{rank=same;E" << ids[e] << "hidden; E" << ids[&*e->left] << "; E" << ids[&*e->right] << '}' << endl
-               << "\tE" << ids[e] << " -- E" << ids[e] << "hidden[style=invis]" << endl;
+               << "\tE" << ids[&*e] << "hidden [label=\"\", width=.1, style=invis]" << endl
+               << "\t{rank=same;E" << ids[&*e] << "hidden; E" << ids[&*e->left] << "; E" << ids[&*e->right] << '}' << endl
+               << "\tE" << ids[&*e] << " -- E" << ids[&*e] << "hidden[style=invis]" << endl;
             /*<< "\tE" << e->left->id << " -- E" << ids[&e] << "hidden --"
                << "\tE" << e->right->id << " [style=invis]" << endl;*/
         }
-        if (e->right != nullptr)
+        if (e->right != tree.end())
         {
             if (ids.find(&*e->right) == ids.end())
                 ids.emplace(&*e->right, id_counter++);
 
-            os << "\tE" << ids[e] << " -- E" << ids[&*e->right] << endl;
-            entries.push(e->right.get());
+            os << "\tE" << ids[&*e] << " -- E" << ids[&*e->right] << endl;
+            entries.push(e->right);
         }
     }
 

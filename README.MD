@@ -136,16 +136,16 @@ graph tableau {
         nodesep=0.4
         ranksep=0.5
 
-        E1[label="F(p)*"]
+        E1[label="T(p) "]
         E1 -- E2
 
-        E2[label="T(~q)*"]
+        E2[label="T(~q) "]
         E2 -- E3
 
-        E3[label="T(p|q)*"]
+        E3[label="T(p|q) "]
         E3 -- E4
 
-        E4[label="F(q)*"]
+        E4[label="F(q) "]
         E4 -- E5
         //hidden node to balance the tree
         E4hidden [label="", width=.1, style=invis]
@@ -155,7 +155,7 @@ graph tableau {
 
         E6[label="T(q)*"]
 
-        E5[label="T(p)*"]
+        E5[label="T(p) "]
 }
 ```
 
