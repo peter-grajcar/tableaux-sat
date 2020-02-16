@@ -35,10 +35,10 @@ private:
 
     public:
         entry(std::list<tableau::entry> &tree, bool sign, const std::string &subformula, tableau::index parent);
-        entry(const entry &e) = delete;
-        entry(entry &&e) = delete;
-        entry operator=(const entry &e) = delete;
-        entry operator=(entry &&e) = delete;
+        entry(const entry &) = delete;
+        entry(entry &&) = delete;
+        entry operator=(const entry &) = delete;
+        entry operator=(entry &&) = delete;
 
         bool is_leaf() const;
         bool is_contradictory() const;
@@ -60,10 +60,10 @@ private:
 
 public:
     tableau(bool sign, const std::string &formula);
-    tableau(const tableau &e) = delete;
-    tableau(tableau &&e) = delete;
-    tableau operator=(const tableau &e) = delete;
-    tableau operator=(tableau &&e) = delete;
+    tableau(const tableau &) = delete;
+    tableau(tableau &&) = delete;
+    tableau operator=(const tableau &) = delete;
+    tableau operator=(tableau &&) = delete;
 
     void append(bool sign, const std::string &formula);
     void reduce();
