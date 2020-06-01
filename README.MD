@@ -192,4 +192,4 @@ Tableau from example 4:
 <img src="examples/example-4.png" width="250" alt="Example 1" />
 </p>
 
-<center>&copy; Peter Grajcar</center>
+<p align="center">&copy; Peter Grajcar</p>
